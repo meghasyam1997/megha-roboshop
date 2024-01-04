@@ -37,4 +37,8 @@ components = {
     name          = "rabbitmq"
     instance_type = "t3.medium"
   }
+  redis = {
+    name          = "redis"
+    instance_type = "t3.medium"
+  }
 }
