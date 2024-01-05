@@ -39,7 +39,7 @@ database_servers = {
     password      = "RoboShop@1"
   }
   mongodb = {
-    name          = "frontend"
+    name          = "mongodb"
     instance_type = "t3.medium"
   }
   rabbitmq = {
