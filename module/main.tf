@@ -18,12 +18,7 @@ resource "null_resource" "provisioner" {
       host = aws_instance.instance.private_ip
     }
 
-    inline = [
-      "rm -rf roboshop-shell",
-      "git clone https://github.com/meghasyam1997/roboshop-shell.git ",
-      "cd roboshop-shell",
-      "sudo bash ${var.component_name}.sh ${var.password}"
-    ]
+    inline = var.app_type == "db" ? local.db_command : local.app_command
   }
 }
 
@@ -33,4 +28,55 @@ resource "aws_route53_record" "records" {
   type     = "A"
   ttl      = 30
   records  = [aws_instance.instance.private_ip]
+}
+
+resource "aws_iam_role" "role" {
+  name = "${var.env}-${var.component_name}-role"
+
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = {
+    tag-key = "${var.component_name}-${var.env}"
+  }
+}
+
+
+resource "aws_iam_role_policy" "ssm-ps-policy" {
+  name = "${var.component_name}-${var.env}-ssm-ps-policy"
+  role = aws_iam_role.role.id
+
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "VisualEditor0",
+        "Effect": "Allow",
+        "Action": [
+          "kms:Decrypt",
+          "ssm:GetParameterHistory",
+          "ssm:GetParametersByPath",
+          "ssm:GetParameters",
+          "ssm:GetParameter"
+        ],
+        "Resource": [
+          "arn:aws:ssm:us-east-1:561174155654:parameter/${var.env}.*",
+          "arn:aws:kms:us-east-1:561174155654:key/54baa543-c347-432e-ab40-108d5d0b67bb"
+        ]
+      }
+    ]
+  })
 }
