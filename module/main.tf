@@ -52,6 +52,10 @@ resource "aws_iam_role" "role" {
   }
 }
 
+resource "aws_iam_instance_profile" "iam_profile" {
+  name = "${var.component_name}-${var.env}"
+  role = aws_iam_role.role.name
+}
 
 resource "aws_iam_role_policy" "ssm-ps-policy" {
   name = "${var.component_name}-${var.env}-ssm-ps-policy"
